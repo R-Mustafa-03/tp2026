@@ -1,3 +1,6 @@
-//
-// Created by Eugene on 03.03.2026.
-//
+#include <iostream>
+
+int main() {
+    std::cout << "grigorian.evgeniy\n";
+    return 0;
+}
