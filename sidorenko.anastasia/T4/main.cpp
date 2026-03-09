@@ -60,7 +60,7 @@ int main()
     printInfo(shapes);
     for (size_t i = 0; i < shapes.size(); ++i)
     {
-        shapes[i]->scale(2);
+        shapes[i]->scale(2.0);
     }
     printInfo(shapes);
     return 0;
