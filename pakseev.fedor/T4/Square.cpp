@@ -4,7 +4,7 @@ Point Square::getCenter() const {
     double centerX = (bl_.x_ + size_) / 2;
     double centerY = (bl_.y_ + size_) / 2;
     return Point(centerX, centerY);
-};
+}
 
 void Square::move(double dx, double dy) {
     bl_.x_ += dx;

@@ -9,9 +9,9 @@ class Ring : public Shape {
 public:
     Ring() = delete;
     Ring(const Point& center, double radOut, double radIn) :
-        center_(center),
         radiusIn_(radIn),
-        radiusOut_(radOut) {
+        radiusOut_(radOut),
+        center_(center) { // changed order of initialization
             if (radOut <= radIn) {
                 throw std::invalid_argument("ERROR: Outer radius must be greater than in radius");
             }
