@@ -1,4 +1,5 @@
 #include <iostream>
+#include <ostream>
 #include <vector>
 #include <memory>
 #include <iomanip>
@@ -10,12 +11,12 @@
 #include "rectangular_trapezoid.h"
 #include "composite_shape.h"
 
-void printInfo(const std::vector<std::unique_ptr<Shape>>& shapes) {
+void printInfo(const std::vector<std::unique_ptr<Shape>>& shapes, std::ostream& stream) {
     std::cout << std::fixed << std::setprecision(2);
 
     for (const auto& shape : shapes) {
         if (shape) {
-            shape->print();
+            shape->print(stream);
             std::cout << "\n";
         }
     }
@@ -35,7 +36,7 @@ int main() {
     shapes.push_back(std::move(compositePtr));
 
     std::cout << "\n--- before ---\n";
-    printInfo(shapes);
+    printInfo(shapes, std::cout);
 
     for (const auto& shape_ptr : shapes) {
         if (shape_ptr) {
@@ -44,7 +45,7 @@ int main() {
     }
 
     std::cout << "\n--- after ---\n";
-    printInfo(shapes);
+    printInfo(shapes, std::cout);
 
     std::string in;
     if (!(std::cin >> in)) {

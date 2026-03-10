@@ -87,7 +87,7 @@ void CompositeShape::print(std::ostream& stream) const {
 
     for (const auto& shape : shapes) {
         stream << std::setw(4);
-        shape->print();
+        shape->print(stream);
         stream << ",\n";
     }
     stream << "]";

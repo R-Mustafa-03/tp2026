@@ -15,7 +15,7 @@ struct Shape {
     virtual void scale(double factor) = 0;
     virtual std::string getName() const  = 0;
     virtual std::pair<Point, Point> getBounds() const = 0;
-    virtual void print(std::ostream& stream = std::cout) const = 0;
+    virtual void print(std::ostream& stream) const = 0;
 };
 
 #endif // SHAPE_H
