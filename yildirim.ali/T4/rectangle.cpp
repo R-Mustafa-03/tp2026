@@ -37,3 +37,4 @@ double Rectangle::getPerimeter() const {
 bool Rectangle::containsPoint(const Point& p) const {
     return (p.x >= bottomLeft.x && p.x <= topRight.x && p.y >= bottomLeft.y && p.y <= topRight.y);
 }
+//

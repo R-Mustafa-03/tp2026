@@ -33,3 +33,4 @@ double Ellipse::getPerimeter() const {
     double h = ((rx - ry) * (rx - ry)) / (sum * sum);
     return M_PI * sum * (1 + (3 * h) / (10 + std::sqrt(4 - 3 * h)));
 }
+//

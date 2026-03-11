@@ -29,3 +29,4 @@ bool Square::containsPoint(const Point& p) const {
 double Square::getPerimeter() const {
     return 4 * sideLength;
 }
+//
