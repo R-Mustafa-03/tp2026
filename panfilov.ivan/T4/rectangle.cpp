@@ -34,5 +34,5 @@ void Rectangle::scale(double factor) {
 }
 
 std::string Rectangle::getName() const {
-    return "Rectangle";
+    return "RECTANGLE";
 }
