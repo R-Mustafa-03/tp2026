@@ -1,34 +1,14 @@
 #include <iostream>
 #include <iomanip>
-#include <vector>
 #include <memory>
+#include <vector>
+#include <stdexcept>
 #include <cstdlib>
+
 #include "rectangle.h"
 #include "ring.h"
 #include "trapezoid.h"
 #include "composite-shape.h"
-
-void printShape(const Shape& s) {
-    Point c = s.getCenter();
-    std::cout << "[" << s.getName() << ", ("
-        << std::fixed << std::setprecision(2) << c.x << ", " << c.y
-        << "), " << s.getArea() << "]";
-
-    const CompositeShape* comp = dynamic_cast<const CompositeShape*>(&s);
-    if (comp) {
-        std::cout << ":";
-        const auto& children = comp->getShapes();
-        for (size_t i = 0; i < children.size(); ++i) {
-            std::cout << "\n";
-            Point cc = children[i]->getCenter();
-            std::cout << children[i]->getName() << ", ("
-                << std::fixed << std::setprecision(2) << cc.x << ", " << cc.y
-                << "), " << children[i]->getArea();
-            if (i != children.size() - 1) std::cout << ",";
-        }
-    }
-    std::cout << "\n";
-}
 
 int main() {
     try {
@@ -39,25 +19,50 @@ int main() {
         shapes.push_back(std::make_unique<Trapezoid>(Point{ 0,0 }, 4, 2, 3));
         shapes.push_back(std::make_unique<Rectangle>(Point{ 5,5 }, Point{ 7,7 }));
 
-        auto comp = std::make_unique<CompositeShape>();
-        comp->add(std::make_unique<Rectangle>(Point{ 1,1 }, Point{ 3,3 }));
-        comp->add(std::make_unique<Ring>(Point{ 2,2 }, 1, 2));
-        shapes.push_back(std::move(comp));
+        auto composite = std::make_unique<CompositeShape>();
+        composite->add(std::make_unique<Rectangle>(Point{ 1,1 }, Point{ 3,3 }));
+        composite->add(std::make_unique<Ring>(Point{ 2,2 }, 1, 2));
+        shapes.push_back(std::move(composite));
+
+        std::cout << std::fixed << std::setprecision(2);
 
         std::cout << "Before scale:\n";
-        for (const auto& s : shapes) {
-            printShape(*s);
+        for (size_t i = 0; i < shapes.size(); i++) {
+            std::cout << shapes[i]->getName() << ", ("
+                << shapes[i]->getCenter().x << ", "
+                << shapes[i]->getCenter().y << "), "
+                << shapes[i]->getArea() << "\n";
         }
 
-        std::cout << "\nAfter scale (x2):\n";
-        for (auto& s : shapes) {
-            s->scale(2.0);
-            printShape(*s);
+        double factor;
+        std::cout << "Enter scale factor: ";
+        std::cin >> factor;
+
+        if (std::cin.fail()) {
+            std::cerr << "Error: Invalid scale factor input" << std::endl;
+            return EXIT_FAILURE;
+        }
+
+        for (size_t i = 0; i < shapes.size(); i++) {
+            shapes[i]->scale(factor);
+        }
+
+        std::cout << "\nAfter scale:\n";
+        for (size_t i = 0; i < shapes.size(); i++) {
+            std::cout << shapes[i]->getName() << ", ("
+                << shapes[i]->getCenter().x << ", "
+                << shapes[i]->getCenter().y << "), "
+                << shapes[i]->getArea() << "\n";
         }
     }
-    catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << "\n";
+    catch (const std::invalid_argument& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
         return EXIT_FAILURE;
     }
+    catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+
     return EXIT_SUCCESS;
 }

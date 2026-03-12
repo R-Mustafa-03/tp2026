@@ -13,7 +13,7 @@ public:
     std::string getName() const override;
 
     double getMinX() const override { return bl_.x; }
-    double getMaxX() const override;
+    double getMaxX() const override; 
     double getMinY() const override { return bl_.y; }
     double getMaxY() const override { return bl_.y + h_; }
 
