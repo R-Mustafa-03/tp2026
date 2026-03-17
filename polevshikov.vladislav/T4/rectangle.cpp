@@ -1,4 +1,5 @@
 #include "rectangle.h"
+#include <stdexcept>
 
 Rectangle::Rectangle(const Point &lowerLeft, double width, double height) :
 lowerLeft_(lowerLeft), width_(width), height_(height) {

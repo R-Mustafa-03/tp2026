@@ -1,5 +1,6 @@
 #include "circle.h"
 #include <cmath>
+#include <stdexcept>
 
 Circle::Circle(const Point &center, double radius) :
 center_(center), radius_(radius) {

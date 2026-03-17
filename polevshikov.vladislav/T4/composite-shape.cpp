@@ -1,4 +1,5 @@
 #include "composite-shape.h"
+#include <stdexcept>
 
 void CompositeShape::add(std::shared_ptr<Shape> shape) {
     if (shape == nullptr) {
