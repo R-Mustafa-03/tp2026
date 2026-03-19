@@ -17,7 +17,7 @@ double IsoscelesTrapezoid::getArea() const {
 }
 
 Point IsoscelesTrapezoid::getCenter() const {
-    double cx = bl.x + bBase / 2.0;
+    double cx = bl.x + (bBase + tBase) / 4.0;
     double cy = bl.y + height / 2.0;
     return { cx, cy };
 }
@@ -32,7 +32,7 @@ void IsoscelesTrapezoid::scale(double factor) {
     bBase = bBase * factor;
     tBase = tBase * factor;
     height = height * factor;
-    bl.x = c.x - bBase / 2.0;
+    bl.x = c.x - (bBase + tBase) / 4.0;
     bl.y = c.y - height / 2.0;
 }
 
