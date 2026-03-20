@@ -1,13 +1,14 @@
 #include <iostream>
 #include <vector>
 #include <memory>
+#include <string>
 #include "point.h"
 #include "rectangle.h"
 #include "ring.h"
 #include "square.h"
 #include "composite_shape.h"
 
-int main() {
+int main(int argc, char* argv[]) {
     std::vector<std::unique_ptr<Shape>> shapes;
 
     shapes.push_back(std::make_unique<Rectangle>(
@@ -26,7 +27,7 @@ int main() {
     composite->addShape(std::make_unique<Rectangle>(Point(10.0, 10.0), Point(13.0, 12.0)));
     composite->addShape(std::make_unique<Square>(Point(15.0, 10.0), 2.0));
     composite->addShape(std::make_unique<Ring>(Point(11.0, 15.0), 2.0, 1.0));
-
+    
     shapes.push_back(std::move(composite));
 
     std::cout << "=== SHAPES BEFORE SCALING ===\n";
@@ -37,10 +38,15 @@ int main() {
     }
 
     double factor;
-    std::cout << "\nEnter scale factor: ";
-    std::cin >> factor;
 
-    if (std::cin.fail() || factor <= 0) {
+    if (argc > 1) {
+        factor = std::stod(argv[1]);
+    } else {
+        std::cout << "\nEnter scale factor (e.g., 2.0, 0.5, 3.0): ";
+        std::cin >> factor;
+    }
+
+    if (factor <= 0) {
         std::cout << "Error: scale factor must be a positive number!\n";
         return 1;
     }
