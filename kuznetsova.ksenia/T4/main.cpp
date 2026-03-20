@@ -328,7 +328,7 @@ testMainTask();
 
 if (std::cin.peek() == EOF) {
 std::cerr << "Error: No input provided" << std::endl;
-return 1;
+return 0;
 }
 
 return 0;
