@@ -12,9 +12,9 @@ void printShape(const Shape& shape)
 {
     Point center = shape.getCenter();
 
-    std::cout << "[" << shape.getName() << ", (" 
-    << std::fixed << std::setprecision(2) << center.x 
-    << ", " << center.y << "), " 
+    std::cout << "[" << shape.getName() << ", ("
+    << std::fixed << std::setprecision(2) << center.x
+    << ", " << center.y << "), "
     << shape.getArea() << "]\n";
 }
 
