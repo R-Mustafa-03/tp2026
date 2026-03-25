@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <limits>
+#include <cmath>
 
 void CompositeShape::addShape(std::shared_ptr<Shape> shape) {
     if (shape) {
@@ -32,7 +33,7 @@ void CompositeShape::getBoundingBox(double& minX, double& minY, double& maxX, do
     for (const auto& shape : shapes) {
         Point center = shape->getCenter();
         double area = shape->getArea();
-        double halfSize = sqrt(area) / 2.0;
+        double halfSize = std::sqrt(area) / 2.0;
 
         minX = std::min(minX, center.x - halfSize);
         minY = std::min(minY, center.y - halfSize);
