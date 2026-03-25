@@ -8,6 +8,7 @@
 class CompositeShape : public Shape {
 private:
     std::vector<std::unique_ptr<Shape>> shapes;
+
 public:
     CompositeShape() = default;
     CompositeShape(const CompositeShape&) = delete;
@@ -16,10 +17,10 @@ public:
     CompositeShape& operator=(CompositeShape&&) noexcept = default;
     ~CompositeShape() noexcept override = default;
 
-    void move(double dx, double dy) override;
     void addShape(std::unique_ptr<Shape> shape);
     double getArea() const override;
-    Point getCenter() const override; 
+    Point getCenter() const override;
+    void move(double dx, double dy) override;
     void scale(double factor) override;
     std::pair<Point, Point> circumscribedRectangle() const override;
     std::string getName() const override;

@@ -1,7 +1,6 @@
 #include "CompositShape.h"
-#include <iostream>
-#include <cmath>
 #include <algorithm>
+#include <cmath>
 
 void CompositeShape::addShape(std::unique_ptr<Shape> shape) {
     if (shape) {
@@ -17,24 +16,27 @@ double CompositeShape::getArea() const {
     return area;
 }
 
-void CompositeShape::move(double dx, double dy) {
-    for (auto& shape : shapes) {
-        shape->move(dx, dy);
-    }
-}
-
 Point CompositeShape::getCenter() const {
     if (shapes.empty()) {
         return Point(0, 0);
     }
 
     auto rect = circumscribedRectangle();
-    return Point((rect.first.x_ + rect.second.x_) / 2,
-        (rect.first.y_ + rect.second.y_) / 2);
+    return Point((rect.first.x_ + rect.second.x_) / 2.0,
+        (rect.first.y_ + rect.second.y_) / 2.0);
+}
+
+void CompositeShape::move(double dx, double dy) {
+    for (auto& shape : shapes) {
+        shape->move(dx, dy);
+    }
 }
 
 void CompositeShape::scale(double factor) {
-    if (factor <= 0.0) return;
+    if (factor <= 0.0) {
+        return;
+    }
+
     Point compositeCenter = getCenter();
 
     for (auto& shape : shapes) {
@@ -69,13 +71,13 @@ std::pair<Point, Point> CompositeShape::circumscribedRectangle() const {
     return { Point(minX, minY), Point(maxX, maxY) };
 }
 
-std::string CompositeShape::getName() const {  
+std::string CompositeShape::getName() const {
     return "CompositeShape";
 }
 
 void CompositeShape::print(std::ostream& stream) const {
-    stream << "[ " << getName() << ": center = (" << getCenter().x_;
-    stream << ", " << getCenter().y_ << "), Area = " << getArea() << ":\n";
+    stream << "[ " << getName() << ": center = (" << getCenter().x_
+        << ", " << getCenter().y_ << "), Area = " << getArea() << ":\n";
     for (const auto& shape : shapes) {
         shape->print(stream);
     }

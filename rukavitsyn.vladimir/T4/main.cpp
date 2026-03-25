@@ -5,7 +5,7 @@
 #include "Ellipse.h"
 #include "Square.h"
 #include "CompositShape.h"
-#include "point.h"
+#include "Point.h"
 
 void printShapes(const std::vector<std::unique_ptr<Shape>>& container) {
     std::cout << std::fixed << std::setprecision(2);
