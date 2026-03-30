@@ -34,7 +34,7 @@ void Trapezoid::scale(double factor) {
     double yTl = bottomLeft.y + height;
     double xTr = xTl + topBase;
     double yTr = yTl;
-    
+
     bottomLeft.x = center.x + (bottomLeft.x - center.x) * factor;
     bottomLeft.y = center.y + (bottomLeft.y - center.y) * factor;
     xBr = center.x + (xBr - center.x) * factor;
@@ -43,7 +43,7 @@ void Trapezoid::scale(double factor) {
     yTl = center.y + (yTl - center.y) * factor;
     xTr = center.x + (xTr - center.x) * factor;
     yTr = center.y + (yTr - center.y) * factor;
-    
+
     bottomBase = std::abs(xBr - bottomLeft.x);
     topBase = std::abs(xTr - xTl);
     height = std::abs(yTl - bottomLeft.y);
