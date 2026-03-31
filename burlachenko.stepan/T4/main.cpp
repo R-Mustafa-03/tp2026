@@ -46,9 +46,18 @@ int main()
         printShape(*shape);
     }
 
+    double scaleFactor = 0.0;
+    std::cout << "Enter scale factor: ";
+    std::cin >> scaleFactor;
+    if (scaleFactor <= 0.0)
+    {
+        std::cerr << "Scale factor must be positive\n";
+        return 1;
+    }
+
     for (const std::shared_ptr<Shape>& shape : shapes)
     {
-        shape->scale(2.0);
+        shape->scale(scaleFactor);
     }
 
     std::cout << "After scaling:\n";
