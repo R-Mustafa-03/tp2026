@@ -5,7 +5,6 @@
 #include <string>
 #include <sstream>
 #include <cmath>
-#include <regex>
 #include <iomanip>
 
 namespace nspace
@@ -70,8 +69,7 @@ nspace::iofmtguard::iofmtguard(std::basic_ios<char>& s) :
     fill_(s.fill()),
     precision_(s.precision()),
     fmt_(s.flags())
-{
-}
+{}
 
 nspace::iofmtguard::~iofmtguard()
 {
@@ -84,10 +82,7 @@ nspace::iofmtguard::~iofmtguard()
 std::istream& nspace::operator>>(std::istream& in, DelimiterIO&& dest)
 {
     std::istream::sentry sentry(in);
-    if (!sentry)
-    {
-        return in;
-    }
+    if (!sentry) return in;
     char c = '0';
     in >> c;
     if (in && (c != dest.exp))
@@ -100,10 +95,7 @@ std::istream& nspace::operator>>(std::istream& in, DelimiterIO&& dest)
 std::istream& nspace::operator>>(std::istream& in, DoubleLitIO&& dest)
 {
     std::istream::sentry sentry(in);
-    if (!sentry)
-    {
-        return in;
-    }
+    if (!sentry) return in;
     double value;
     char suffix;
     in >> value >> suffix;
@@ -121,10 +113,7 @@ std::istream& nspace::operator>>(std::istream& in, DoubleLitIO&& dest)
 std::istream& nspace::operator>>(std::istream& in, RationalIO&& dest)
 {
     std::istream::sentry sentry(in);
-    if (!sentry)
-    {
-        return in;
-    }
+    if (!sentry) return in;
     long long numerator;
     unsigned long long denominator;
     in >> DelimiterIO{ '(' } >> DelimiterIO{ ':' } >> DelimiterIO{ 'N' };
@@ -146,20 +135,14 @@ std::istream& nspace::operator>>(std::istream& in, RationalIO&& dest)
 std::istream& nspace::operator>>(std::istream& in, StringIO&& dest)
 {
     std::istream::sentry sentry(in);
-    if (!sentry)
-    {
-        return in;
-    }
+    if (!sentry) return in;
     return std::getline(in >> DelimiterIO{ '"' }, dest.ref, '"');
 }
 
 std::istream& nspace::operator>>(std::istream& in, LabelIO&& dest)
 {
     std::istream::sentry sentry(in);
-    if (!sentry)
-    {
-        return in;
-    }
+    if (!sentry) return in;
     std::string data;
     if ((in >> StringIO{ data }) && (data != dest.exp))
     {
@@ -171,10 +154,7 @@ std::istream& nspace::operator>>(std::istream& in, LabelIO&& dest)
 std::istream& nspace::operator>>(std::istream& in, DataStruct& dest)
 {
     std::istream::sentry sentry(in);
-    if (!sentry)
-    {
-        return in;
-    }
+    if (!sentry) return in;
 
     DataStruct input;
     bool key1Set = false;
@@ -194,21 +174,22 @@ std::istream& nspace::operator>>(std::istream& in, DataStruct& dest)
         in.putback(c);
 
         std::string fieldName;
-        in >> StringIO{ fieldName };
+        in >> LabelIO{ fieldName };
+        in >> DelimiterIO{ ' ' };
 
         if (fieldName == "key1")
         {
-            in >> DelimiterIO{ ' ' } >> DoubleLitIO{ input.key1 };
+            in >> DoubleLitIO{ input.key1 };
             key1Set = true;
         }
         else if (fieldName == "key2")
         {
-            in >> DelimiterIO{ ' ' } >> RationalIO{ input.key2 };
+            in >> RationalIO{ input.key2 };
             key2Set = true;
         }
         else if (fieldName == "key3")
         {
-            in >> DelimiterIO{ ' ' } >> StringIO{ input.key3 };
+            in >> StringIO{ input.key3 };
             key3Set = true;
         }
         else
@@ -232,10 +213,7 @@ std::istream& nspace::operator>>(std::istream& in, DataStruct& dest)
 std::ostream& nspace::operator<<(std::ostream& out, const DataStruct& src)
 {
     std::ostream::sentry sentry(out);
-    if (!sentry)
-    {
-        return out;
-    }
+    if (!sentry) return out;
     nspace::iofmtguard fmtguard(out);
 
     out << "(:key1 " << std::fixed << std::setprecision(1) << src.key1 << "d";
@@ -246,16 +224,14 @@ std::ostream& nspace::operator<<(std::ostream& out, const DataStruct& src)
 
 int main()
 {
-    using nspace::DataStruct;
+    std::vector<nspace::DataStruct> dataVector;
 
-    std::vector<DataStruct> dataVector;
-
-    std::istream_iterator<DataStruct> inputBegin(std::cin);
-    std::istream_iterator<DataStruct> inputEnd;
+    std::istream_iterator<nspace::DataStruct> inputBegin(std::cin);
+    std::istream_iterator<nspace::DataStruct> inputEnd;
     std::copy(inputBegin, inputEnd, std::back_inserter(dataVector));
 
     std::sort(dataVector.begin(), dataVector.end(),
-        [](const DataStruct& a, const DataStruct& b) {
+        [](const nspace::DataStruct& a, const nspace::DataStruct& b) {
             if (a.key1 != b.key1) {
                 return a.key1 < b.key1;
             }
@@ -267,7 +243,7 @@ int main()
             return a.key3.length() < b.key3.length();
         });
 
-    std::ostream_iterator<DataStruct> outputBegin(std::cout, "\n");
+    std::ostream_iterator<nspace::DataStruct> outputBegin(std::cout, "\n");
     std::copy(dataVector.begin(), dataVector.end(), outputBegin);
 
     return 0;
