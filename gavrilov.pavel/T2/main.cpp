@@ -138,112 +138,50 @@ std::istream& nspace::operator>>(std::istream& in, DataStruct& dest)
     std::istream::sentry sentry(in);
     if (!sentry) return in;
 
-    std::string line;
-    if (!std::getline(in, line))
-    {
-        in.setstate(std::ios::failbit);
-        return in;
-    }
-
-    std::istringstream iss(line);
-
     DataStruct input;
     bool key1Set = false;
     bool key2Set = false;
     bool key3Set = false;
 
-    char openBracket;
-    iss >> openBracket;
-    if (openBracket != '(')
-    {
-        in.setstate(std::ios::failbit);
-        return in;
-    }
+    in >> DelimiterIO{ '(' };
 
-    while (iss)
+    while (in)
     {
         char c;
-        iss >> c;
+        in >> c;
         if (c == ')')
         {
             break;
         }
-        iss.putback(c);
+        in.putback(c);
 
         std::string fieldName;
-        iss >> fieldName;
-        if (!iss) break;
-
-        char colon;
-        iss >> colon;
-        if (colon != ':') break;
+        in >> fieldName;
+        in >> DelimiterIO{ ':' };
 
         if (fieldName == "key1")
         {
-            double value;
-            char suffix;
-            iss >> value >> suffix;
-            if (iss && (suffix == 'd' || suffix == 'D'))
-            {
-                input.key1 = value;
-                key1Set = true;
-            }
-            else
-            {
-                break;
-            }
+            in >> DoubleLitIO{ input.key1 };
+            key1Set = true;
         }
         else if (fieldName == "key2")
         {
-            char openParen;
-            iss >> openParen;
-            if (openParen != '(') break;
-
-            char colon1, n, colon2, d, colon3;
-            long long numerator;
-            unsigned long long denominator;
-
-            iss >> colon1 >> n >> colon2;
-            if (colon1 != ':' || n != 'N' || colon2 != ':') break;
-
-            iss >> numerator;
-            iss >> colon3;
-            if (colon3 != ':') break;
-
-            iss >> d >> colon2;
-            if (d != 'D' || colon2 != ':') break;
-
-            iss >> denominator;
-            iss >> colon3;
-            if (colon3 != ':') break;
-
-            char closeParen;
-            iss >> closeParen;
-            if (closeParen != ')') break;
-
-            if (denominator == 0) break;
-
-            input.key2 = std::make_pair(numerator, denominator);
+            in >> RationalIO{ input.key2 };
             key2Set = true;
         }
         else if (fieldName == "key3")
         {
-            char quote;
-            iss >> quote;
-            if (quote != '"') break;
-
-            std::string value;
-            std::getline(iss, value, '"');
-            input.key3 = value;
+            in >> StringIO{ input.key3 };
             key3Set = true;
         }
         else
         {
+            in.setstate(std::ios::failbit);
             break;
         }
     }
 
-    if (key1Set && key2Set && key3Set)
+    if (in && key1Set && key2Set && key3Set)
     {
         dest = std::move(input);
     }
