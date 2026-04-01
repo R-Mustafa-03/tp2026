@@ -1,6 +1,6 @@
 #include "Ring.h"
 #include <stdexcept>
-#include <numbers>
+#include <cmath>
 
 Ring::Ring(const Point& c, double outerR, double innerR)
     : center(c), outerRadius(outerR), innerRadius(innerR) {
@@ -13,7 +13,8 @@ Ring::Ring(const Point& c, double outerR, double innerR)
 }
 
 double Ring::getArea() const {
-    return std::numbers::pi * (outerRadius * outerRadius - innerRadius * innerRadius);
+    const double PI = 3.14159265358979323846;
+    return PI * (outerRadius * outerRadius - innerRadius * innerRadius);
 }
 
 void Ring::getBoundingBox(double& minX, double& minY,
