@@ -18,4 +18,4 @@ public:
     virtual Point getBottomLeft() const = 0;
 };
 
-#endif // !SHAPE_H
+#endif
