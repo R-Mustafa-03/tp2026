@@ -91,7 +91,7 @@ namespace nspace {
     }
 
     std::ostream& operator<<(std::ostream& out, const DataStruct& src) {
-        out << "(:key1 " << std::scientific << std::setprecision(1) << std::uppercase << src.key1;
+        out << "(:key1 " << std::scientific << std::setprecision(1) << std::lowercase << src.key1;
         out << ":key2 0b" << (src.key2 == 0 ? "0" : "");
         if (src.key2 > 0) {
             std::string b;
@@ -111,7 +111,7 @@ namespace nspace {
 }
 
 int main() {
-    std::vector<nspace::DataStruct> data;
+    std::vector<nspace::DataStruct> vec;
     std::string line;
 
     while (std::getline(std::cin, line)) {
@@ -120,15 +120,15 @@ int main() {
         std::copy(
             std::istream_iterator<nspace::DataStruct>(iss),
             std::istream_iterator<nspace::DataStruct>(),
-            std::back_inserter(data)
+            std::back_inserter(vec)
         );
     }
 
-    std::sort(data.begin(), data.end(), nspace::compare_data);
+    std::sort(vec.begin(), vec.end(), nspace::compare_data);
 
     std::copy(
-        data.begin(),
-        data.end(),
+        vec.begin(),
+        vec.end(),
         std::ostream_iterator<nspace::DataStruct>(std::cout, "\n")
     );
 
