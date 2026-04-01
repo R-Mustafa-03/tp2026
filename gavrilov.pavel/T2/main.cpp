@@ -20,8 +20,7 @@ bool isDoubleLit(const std::string& s)
     size_t pos = 0;
     try {
         std::stod(s, &pos);
-    }
-    catch (...) {
+    } catch (...) {
         return false;
     }
     if (pos + 1 != s.length()) return false;
@@ -38,26 +37,29 @@ bool isRational(const std::string& s)
 {
     if (s.empty() || s.front() != '(' || s.back() != ')') return false;
     std::string inner = s.substr(1, s.length() - 2);
-    std::istringstream iss(inner);
-    char c1, c2, c3, c4;
-    long long num;
-    unsigned long long den;
-    iss >> c1 >> c2 >> c3 >> num >> c4;
-    if (c1 != ':' || c2 != 'N' || c3 != ':' || c4 != ':') return false;
-    iss >> c1 >> c2 >> den >> c3;
-    if (c1 != 'D' || c2 != ':' || c3 != ':') return false;
-    return den != 0;
+    size_t pos = 0;
+    try {
+        long long num;
+        unsigned long long den;
+        if (inner.find(":N") == std::string::npos) return false;
+        if (inner.find(":D") == std::string::npos) return false;
+        size_t nPos = inner.find(":N") + 2;
+        size_t dPos = inner.find(":D") + 2;
+        num = std::stoll(inner.substr(nPos, inner.find(":", nPos) - nPos));
+        den = std::stoull(inner.substr(dPos, inner.find(":", dPos) - dPos));
+        return den != 0;
+    } catch (...) {
+        return false;
+    }
 }
 
 std::pair<long long, unsigned long long> parseRational(const std::string& s)
 {
     std::string inner = s.substr(1, s.length() - 2);
-    std::istringstream iss(inner);
-    char c1, c2, c3, c4;
-    long long num;
-    unsigned long long den;
-    iss >> c1 >> c2 >> c3 >> num >> c4;
-    iss >> c1 >> c2 >> den >> c3;
+    size_t nPos = inner.find(":N") + 2;
+    size_t dPos = inner.find(":D") + 2;
+    long long num = std::stoll(inner.substr(nPos, inner.find(":", nPos) - nPos));
+    unsigned long long den = std::stoull(inner.substr(dPos, inner.find(":", dPos) - dPos));
     return std::make_pair(num, den);
 }
 
@@ -76,19 +78,11 @@ std::istream& operator>>(std::istream& in, DataStruct& data)
     std::string line;
     if (!std::getline(in, line))
     {
-        in.setstate(std::ios::failbit);
         return in;
     }
 
-    if (line.empty())
+    if (line.empty() || line.front() != '(' || line.back() != ')')
     {
-        in.setstate(std::ios::failbit);
-        return in;
-    }
-
-    if (line.front() != '(' || line.back() != ')')
-    {
-        in.setstate(std::ios::failbit);
         return in;
     }
 
@@ -163,9 +157,7 @@ std::istream& operator>>(std::istream& in, DataStruct& data)
     {
         data = result;
     }
-    else
-    {
-    }
+
     return in;
 }
 
