@@ -6,188 +6,269 @@
 #include <sstream>
 #include <cmath>
 #include <regex>
+#include <iomanip>
 
-struct DataStruct {
-    double key1;
-    std::pair<long long, unsigned long long> key2;
-    std::string key3;
-};
+namespace nspace
+{
+    struct DataStruct
+    {
+        double key1;
+        std::pair<long long, unsigned long long> key2;
+        std::string key3;
+    };
 
-bool parseDoubleLit(const std::string& str, double& value) {
-    std::regex litRegex("^([0-9]+\\.[0-9]+)[dD]$");
-    std::smatch match;
-    if (std::regex_match(str, match, litRegex)) {
-        try {
-            value = std::stod(match[1].str());
-            return true;
-        } catch (...) {
-            return false;
-        }
-    }
-    return false;
+    struct DelimiterIO
+    {
+        char exp;
+    };
+
+    struct DoubleLitIO
+    {
+        double& ref;
+    };
+
+    struct RationalIO
+    {
+        std::pair<long long, unsigned long long>& ref;
+    };
+
+    struct StringIO
+    {
+        std::string& ref;
+    };
+
+    struct LabelIO
+    {
+        std::string exp;
+    };
+
+    class iofmtguard
+    {
+    public:
+        iofmtguard(std::basic_ios<char>& s);
+        ~iofmtguard();
+    private:
+        std::basic_ios<char>& s_;
+        std::streamsize width_;
+        char fill_;
+        std::streamsize precision_;
+        std::basic_ios<char>::fmtflags fmt_;
+    };
+
+    std::istream& operator>>(std::istream& in, DelimiterIO&& dest);
+    std::istream& operator>>(std::istream& in, DoubleLitIO&& dest);
+    std::istream& operator>>(std::istream& in, RationalIO&& dest);
+    std::istream& operator>>(std::istream& in, StringIO&& dest);
+    std::istream& operator>>(std::istream& in, LabelIO&& dest);
+    std::istream& operator>>(std::istream& in, DataStruct& dest);
+    std::ostream& operator<<(std::ostream& out, const DataStruct& src);
 }
 
-bool parseRational(const std::string& str, std::pair<long long, unsigned long long>& value) {
-    std::regex ratRegex("^\\(:N\\s+(-?[0-9]+):D\\s+([0-9]+):\\)$");
-    std::smatch match;
-    if (std::regex_match(str, match, ratRegex)) {
-        try {
-            long long numerator = std::stoll(match[1].str());
-            unsigned long long denominator = std::stoull(match[2].str());
-            if (denominator == 0) return false;
-            value = std::make_pair(numerator, denominator);
-            return true;
-        } catch (...) {
-            return false;
-        }
-    }
-    return false;
+nspace::iofmtguard::iofmtguard(std::basic_ios<char>& s) :
+    s_(s),
+    width_(s.width()),
+    fill_(s.fill()),
+    precision_(s.precision()),
+    fmt_(s.flags())
+{
 }
 
-bool parseQuotedString(const std::string& str, std::string& value) {
-    std::regex stringRegex("^\"([^\"]*)\"$");
-    std::smatch match;
-    if (std::regex_match(str, match, stringRegex)) {
-        value = match[1].str();
-        return true;
-    }
-    return false;
+nspace::iofmtguard::~iofmtguard()
+{
+    s_.width(width_);
+    s_.fill(fill_);
+    s_.precision(precision_);
+    s_.flags(fmt_);
 }
 
-bool parseDataStruct(const std::string& line, DataStruct& data) {
-    if (line.empty() || line.front() != '(' || line.back() != ')') {
-        return false;
+std::istream& nspace::operator>>(std::istream& in, DelimiterIO&& dest)
+{
+    std::istream::sentry sentry(in);
+    if (!sentry)
+    {
+        return in;
+    }
+    char c = '0';
+    in >> c;
+    if (in && (c != dest.exp))
+    {
+        in.setstate(std::ios::failbit);
+    }
+    return in;
+}
+
+std::istream& nspace::operator>>(std::istream& in, DoubleLitIO&& dest)
+{
+    std::istream::sentry sentry(in);
+    if (!sentry)
+    {
+        return in;
+    }
+    double value;
+    char suffix;
+    in >> value >> suffix;
+    if (in && (suffix == 'd' || suffix == 'D'))
+    {
+        dest.ref = value;
+    }
+    else
+    {
+        in.setstate(std::ios::failbit);
+    }
+    return in;
+}
+
+std::istream& nspace::operator>>(std::istream& in, RationalIO&& dest)
+{
+    std::istream::sentry sentry(in);
+    if (!sentry)
+    {
+        return in;
+    }
+    long long numerator;
+    unsigned long long denominator;
+    in >> DelimiterIO{ '(' } >> DelimiterIO{ ':' } >> DelimiterIO{ 'N' };
+    in >> numerator;
+    in >> DelimiterIO{ ':' } >> DelimiterIO{ 'D' };
+    in >> denominator;
+    in >> DelimiterIO{ ':' } >> DelimiterIO{ ')' };
+    if (in && denominator != 0)
+    {
+        dest.ref = std::make_pair(numerator, denominator);
+    }
+    else
+    {
+        in.setstate(std::ios::failbit);
+    }
+    return in;
+}
+
+std::istream& nspace::operator>>(std::istream& in, StringIO&& dest)
+{
+    std::istream::sentry sentry(in);
+    if (!sentry)
+    {
+        return in;
+    }
+    return std::getline(in >> DelimiterIO{ '"' }, dest.ref, '"');
+}
+
+std::istream& nspace::operator>>(std::istream& in, LabelIO&& dest)
+{
+    std::istream::sentry sentry(in);
+    if (!sentry)
+    {
+        return in;
+    }
+    std::string data;
+    if ((in >> StringIO{ data }) && (data != dest.exp))
+    {
+        in.setstate(std::ios::failbit);
+    }
+    return in;
+}
+
+std::istream& nspace::operator>>(std::istream& in, DataStruct& dest)
+{
+    std::istream::sentry sentry(in);
+    if (!sentry)
+    {
+        return in;
     }
 
-    std::string content = line.substr(1, line.length() - 2);
-
-    std::vector<std::string> parts;
-    std::string current;
-    int bracketDepth = 0;
-    bool inQuotes = false;
-
-    for (char c : content) {
-        if (c == '"') {
-            inQuotes = !inQuotes;
-            current += c;
-        } else if (c == '(' && !inQuotes) {
-            bracketDepth++;
-            current += c;
-        } else if (c == ')' && !inQuotes) {
-            bracketDepth--;
-            current += c;
-        } else if (c == ':' && bracketDepth == 0 && !inQuotes) {
-            if (!current.empty()) {
-                parts.push_back(current);
-                current.clear();
-            }
-        } else {
-            current += c;
-        }
-    }
-    if (!current.empty()) {
-        parts.push_back(current);
-    }
-
-    double key1 = 0.0;
-    std::pair<long long, unsigned long long> key2;
-    std::string key3;
+    DataStruct input;
     bool key1Set = false;
     bool key2Set = false;
     bool key3Set = false;
 
-    for (const auto& part : parts) {
-        size_t spacePos = part.find(' ');
-        if (spacePos == std::string::npos) {
-            return false;
+    in >> DelimiterIO{ '(' };
+
+    while (in)
+    {
+        char c;
+        in >> c;
+        if (c == ')')
+        {
+            break;
         }
+        in.putback(c);
 
-        std::string fieldName = part.substr(0, spacePos);
-        std::string fieldValue = part.substr(spacePos + 1);
+        std::string fieldName;
+        in >> StringIO{ fieldName };
 
-        if (fieldName == "key1") {
-            if (parseDoubleLit(fieldValue, key1)) {
-                key1Set = true;
-            } else {
-                return false;
-            }
-        } else if (fieldName == "key2") {
-            if (parseRational(fieldValue, key2)) {
-                key2Set = true;
-            } else {
-                return false;
-            }
-        } else if (fieldName == "key3") {
-            if (parseQuotedString(fieldValue, key3)) {
-                key3Set = true;
-            } else {
-                return false;
-            }
+        if (fieldName == "key1")
+        {
+            in >> DelimiterIO{ ' ' } >> DoubleLitIO{ input.key1 };
+            key1Set = true;
+        }
+        else if (fieldName == "key2")
+        {
+            in >> DelimiterIO{ ' ' } >> RationalIO{ input.key2 };
+            key2Set = true;
+        }
+        else if (fieldName == "key3")
+        {
+            in >> DelimiterIO{ ' ' } >> StringIO{ input.key3 };
+            key3Set = true;
+        }
+        else
+        {
+            in.setstate(std::ios::failbit);
+            break;
         }
     }
 
-    if (!key1Set || !key2Set || !key3Set) {
-        return false;
+    if (in && key1Set && key2Set && key3Set)
+    {
+        dest = std::move(input);
     }
-
-    data.key1 = key1;
-    data.key2 = key2;
-    data.key3 = key3;
-    return true;
+    else
+    {
+        in.setstate(std::ios::failbit);
+    }
+    return in;
 }
 
-std::string formatDoubleLit(double value) {
-    std::ostringstream oss;
-    oss.precision(1);
-    oss << std::fixed << value << "d";
-    return oss.str();
-}
+std::ostream& nspace::operator<<(std::ostream& out, const DataStruct& src)
+{
+    std::ostream::sentry sentry(out);
+    if (!sentry)
+    {
+        return out;
+    }
+    nspace::iofmtguard fmtguard(out);
 
-std::string formatRational(const std::pair<long long, unsigned long long>& value) {
-    std::ostringstream oss;
-    oss << "(:N " << value.first << ":D " << value.second << ":)";
-    return oss.str();
-}
-
-std::string formatQuotedString(const std::string& value) {
-    return "\"" + value + "\"";
-}
-
-std::ostream& operator<<(std::ostream& out, const DataStruct& data) {
-    out << "(:key1 " << formatDoubleLit(data.key1)
-        << ":key2 " << formatRational(data.key2)
-        << ":key3 " << formatQuotedString(data.key3) << ":)";
+    out << "(:key1 " << std::fixed << std::setprecision(1) << src.key1 << "d";
+    out << ":key2 (:N " << src.key2.first << ":D " << src.key2.second << ":)";
+    out << ":key3 \"" << src.key3 << "\":)";
     return out;
 }
 
-bool compareDataStruct(const DataStruct& a, const DataStruct& b) {
-    if (a.key1 != b.key1) {
-        return a.key1 < b.key1;
-    }
-    double aKey2Value = static_cast<double>(a.key2.first) / a.key2.second;
-    double bKey2Value = static_cast<double>(b.key2.first) / b.key2.second;
-    if (std::abs(aKey2Value - bKey2Value) > 1e-12) {
-        return aKey2Value < bKey2Value;
-    }
-    return a.key3.length() < b.key3.length();
-}
+int main()
+{
+    using nspace::DataStruct;
 
-int main() {
     std::vector<DataStruct> dataVector;
-    std::string line;
 
-    while (std::getline(std::cin, line)) {
-        DataStruct data;
-        if (parseDataStruct(line, data)) {
-            dataVector.push_back(data);
-        }
-    }
+    std::istream_iterator<DataStruct> inputBegin(std::cin);
+    std::istream_iterator<DataStruct> inputEnd;
+    std::copy(inputBegin, inputEnd, std::back_inserter(dataVector));
 
-    std::sort(dataVector.begin(), dataVector.end(), compareDataStruct);
+    std::sort(dataVector.begin(), dataVector.end(),
+        [](const DataStruct& a, const DataStruct& b) {
+            if (a.key1 != b.key1) {
+                return a.key1 < b.key1;
+            }
+            double aKey2Value = static_cast<double>(a.key2.first) / a.key2.second;
+            double bKey2Value = static_cast<double>(b.key2.first) / b.key2.second;
+            if (std::abs(aKey2Value - bKey2Value) > 1e-12) {
+                return aKey2Value < bKey2Value;
+            }
+            return a.key3.length() < b.key3.length();
+        });
 
-    for (const auto& data : dataVector) {
-        std::cout << data << "\n";
-    }
+    std::ostream_iterator<DataStruct> outputBegin(std::cout, "\n");
+    std::copy(dataVector.begin(), dataVector.end(), outputBegin);
 
     return 0;
 }
