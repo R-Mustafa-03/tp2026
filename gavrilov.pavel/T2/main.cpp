@@ -7,183 +7,150 @@
 #include <cmath>
 #include <iomanip>
 
-namespace nspace
+struct DataStruct
 {
-    struct DataStruct
-    {
-        double key1;
-        std::pair<long long, unsigned long long> key2;
-        std::string key3;
-    };
+    double key1;
+    std::pair<long long, unsigned long long> key2;
+    std::string key3;
+};
 
-    struct DelimiterIO
-    {
-        char exp;
-    };
-
-    struct DoubleLitIO
-    {
-        double& ref;
-    };
-
-    struct RationalIO
-    {
-        std::pair<long long, unsigned long long>& ref;
-    };
-
-    struct StringIO
-    {
-        std::string& ref;
-    };
-
-    class iofmtguard
-    {
-    public:
-        iofmtguard(std::basic_ios<char>& s);
-        ~iofmtguard();
-    private:
-        std::basic_ios<char>& s_;
-        std::streamsize width_;
-        char fill_;
-        std::streamsize precision_;
-        std::basic_ios<char>::fmtflags fmt_;
-    };
-
-    std::istream& operator>>(std::istream& in, DelimiterIO&& dest);
-    std::istream& operator>>(std::istream& in, DoubleLitIO&& dest);
-    std::istream& operator>>(std::istream& in, RationalIO&& dest);
-    std::istream& operator>>(std::istream& in, StringIO&& dest);
-    std::istream& operator>>(std::istream& in, DataStruct& dest);
-    std::ostream& operator<<(std::ostream& out, const DataStruct& src);
+bool isDoubleLit(const std::string& s)
+{
+    if (s.empty()) return false;
+    size_t pos = 0;
+    double val;
+    try {
+        val = std::stod(s, &pos);
+    } catch (...) {
+        return false;
+    }
+    if (pos + 1 != s.length()) return false;
+    char suffix = s[pos];
+    return (suffix == 'd' || suffix == 'D');
 }
 
-nspace::iofmtguard::iofmtguard(std::basic_ios<char>& s) :
-    s_(s),
-    width_(s.width()),
-    fill_(s.fill()),
-    precision_(s.precision()),
-    fmt_(s.flags())
-{}
-
-nspace::iofmtguard::~iofmtguard()
+double parseDoubleLit(const std::string& s)
 {
-    s_.width(width_);
-    s_.fill(fill_);
-    s_.precision(precision_);
-    s_.flags(fmt_);
+    return std::stod(s.substr(0, s.length() - 1));
 }
 
-std::istream& nspace::operator>>(std::istream& in, DelimiterIO&& dest)
+bool isRational(const std::string& s)
 {
-    std::istream::sentry sentry(in);
-    if (!sentry) return in;
-    char c = '0';
-    in >> c;
-    if (in && (c != dest.exp))
+    if (s.empty() || s.front() != '(' || s.back() != ')') return false;
+    std::string inner = s.substr(1, s.length() - 2);
+    std::istringstream iss(inner);
+    char c1, c2, c3, c4;
+    long long num;
+    unsigned long long den;
+    iss >> c1 >> c2 >> c3 >> num >> c4;
+    if (c1 != ':' || c2 != 'N' || c3 != ':' || c4 != ':') return false;
+    iss >> c1 >> c2 >> den >> c3;
+    if (c1 != 'D' || c2 != ':' || c3 != ':') return false;
+    return den != 0;
+}
+
+std::pair<long long, unsigned long long> parseRational(const std::string& s)
+{
+    std::string inner = s.substr(1, s.length() - 2);
+    std::istringstream iss(inner);
+    char c1, c2, c3, c4;
+    long long num;
+    unsigned long long den;
+    iss >> c1 >> c2 >> c3 >> num >> c4;
+    iss >> c1 >> c2 >> den >> c3;
+    return std::make_pair(num, den);
+}
+
+bool isQuotedString(const std::string& s)
+{
+    return s.length() >= 2 && s.front() == '"' && s.back() == '"';
+}
+
+std::string parseQuotedString(const std::string& s)
+{
+    return s.substr(1, s.length() - 2);
+}
+
+std::istream& operator>>(std::istream& in, DataStruct& data)
+{
+    std::string line;
+    if (!std::getline(in, line)) return in;
+
+    if (line.empty() || line.front() != '(' || line.back() != ')')
     {
         in.setstate(std::ios::failbit);
+        return in;
     }
-    return in;
-}
 
-std::istream& nspace::operator>>(std::istream& in, DoubleLitIO&& dest)
-{
-    std::istream::sentry sentry(in);
-    if (!sentry) return in;
-    double value;
-    char suffix;
-    in >> value >> suffix;
-    if (in && (suffix == 'd' || suffix == 'D'))
+    std::string content = line.substr(1, line.length() - 2);
+    std::vector<std::string> parts;
+    std::string current;
+    int bracketDepth = 0;
+    bool inQuotes = false;
+
+    for (char c : content)
     {
-        dest.ref = value;
-    }
-    else
-    {
-        in.setstate(std::ios::failbit);
-    }
-    return in;
-}
-
-std::istream& nspace::operator>>(std::istream& in, RationalIO&& dest)
-{
-    std::istream::sentry sentry(in);
-    if (!sentry) return in;
-    long long numerator;
-    unsigned long long denominator;
-    in >> DelimiterIO{ '(' } >> DelimiterIO{ ':' } >> DelimiterIO{ 'N' };
-    in >> numerator;
-    in >> DelimiterIO{ ':' } >> DelimiterIO{ 'D' };
-    in >> denominator;
-    in >> DelimiterIO{ ':' } >> DelimiterIO{ ')' };
-    if (in && denominator != 0)
-    {
-        dest.ref = std::make_pair(numerator, denominator);
-    }
-    else
-    {
-        in.setstate(std::ios::failbit);
-    }
-    return in;
-}
-
-std::istream& nspace::operator>>(std::istream& in, StringIO&& dest)
-{
-    std::istream::sentry sentry(in);
-    if (!sentry) return in;
-    return std::getline(in >> DelimiterIO{ '"' }, dest.ref, '"');
-}
-
-std::istream& nspace::operator>>(std::istream& in, DataStruct& dest)
-{
-    std::istream::sentry sentry(in);
-    if (!sentry) return in;
-
-    DataStruct input;
-    bool key1Set = false;
-    bool key2Set = false;
-    bool key3Set = false;
-
-    in >> DelimiterIO{ '(' };
-
-    while (in)
-    {
-        char c;
-        in >> c;
-        if (c == ')')
+        if (c == '"')
         {
-            break;
+            inQuotes = !inQuotes;
+            current += c;
         }
-        in.putback(c);
-
-        std::string fieldName;
-        in >> fieldName;
-        in >> DelimiterIO{ ':' };
-
-        if (fieldName == "key1")
+        else if (c == '(' && !inQuotes)
         {
-            in >> DoubleLitIO{ input.key1 };
-            key1Set = true;
+            bracketDepth++;
+            current += c;
         }
-        else if (fieldName == "key2")
+        else if (c == ')' && !inQuotes)
         {
-            in >> RationalIO{ input.key2 };
-            key2Set = true;
+            bracketDepth--;
+            current += c;
         }
-        else if (fieldName == "key3")
+        else if (c == ':' && bracketDepth == 0 && !inQuotes)
         {
-            in >> StringIO{ input.key3 };
-            key3Set = true;
+            if (!current.empty())
+            {
+                parts.push_back(current);
+                current.clear();
+            }
         }
         else
         {
-            in.setstate(std::ios::failbit);
-            break;
+            current += c;
+        }
+    }
+    if (!current.empty()) parts.push_back(current);
+
+    DataStruct result;
+    bool key1Ok = false, key2Ok = false, key3Ok = false;
+
+    for (const auto& part : parts)
+    {
+        size_t spacePos = part.find(' ');
+        if (spacePos == std::string::npos) continue;
+
+        std::string fieldName = part.substr(0, spacePos);
+        std::string fieldValue = part.substr(spacePos + 1);
+
+        if (fieldName == "key1" && isDoubleLit(fieldValue))
+        {
+            result.key1 = parseDoubleLit(fieldValue);
+            key1Ok = true;
+        }
+        else if (fieldName == "key2" && isRational(fieldValue))
+        {
+            result.key2 = parseRational(fieldValue);
+            key2Ok = true;
+        }
+        else if (fieldName == "key3" && isQuotedString(fieldValue))
+        {
+            result.key3 = parseQuotedString(fieldValue);
+            key3Ok = true;
         }
     }
 
-    if (in && key1Set && key2Set && key3Set)
+    if (key1Ok && key2Ok && key3Ok)
     {
-        dest = std::move(input);
+        data = result;
     }
     else
     {
@@ -192,40 +159,32 @@ std::istream& nspace::operator>>(std::istream& in, DataStruct& dest)
     return in;
 }
 
-std::ostream& nspace::operator<<(std::ostream& out, const DataStruct& src)
+std::ostream& operator<<(std::ostream& out, const DataStruct& data)
 {
-    std::ostream::sentry sentry(out);
-    if (!sentry) return out;
-    nspace::iofmtguard fmtguard(out);
-
-    out << "(:key1 " << std::fixed << std::setprecision(1) << src.key1 << "d";
-    out << ":key2 (:N " << src.key2.first << ":D " << src.key2.second << ":)";
-    out << ":key3 \"" << src.key3 << "\":)";
+    out << "(:key1 " << std::fixed << std::setprecision(1) << data.key1 << "d";
+    out << ":key2 (:N " << data.key2.first << ":D " << data.key2.second << ":)";
+    out << ":key3 \"" << data.key3 << "\":)";
     return out;
 }
 
 int main()
 {
-    std::vector<nspace::DataStruct> dataVector;
+    std::vector<DataStruct> dataVector;
 
-    std::istream_iterator<nspace::DataStruct> inputBegin(std::cin);
-    std::istream_iterator<nspace::DataStruct> inputEnd;
+    std::istream_iterator<DataStruct> inputBegin(std::cin);
+    std::istream_iterator<DataStruct> inputEnd;
     std::copy(inputBegin, inputEnd, std::back_inserter(dataVector));
 
     std::sort(dataVector.begin(), dataVector.end(),
-        [](const nspace::DataStruct& a, const nspace::DataStruct& b) {
-            if (a.key1 != b.key1) {
-                return a.key1 < b.key1;
-            }
-            double aKey2Value = static_cast<double>(a.key2.first) / a.key2.second;
-            double bKey2Value = static_cast<double>(b.key2.first) / b.key2.second;
-            if (std::abs(aKey2Value - bKey2Value) > 1e-12) {
-                return aKey2Value < bKey2Value;
-            }
+        [](const DataStruct& a, const DataStruct& b) {
+            if (a.key1 != b.key1) return a.key1 < b.key1;
+            double aVal = static_cast<double>(a.key2.first) / a.key2.second;
+            double bVal = static_cast<double>(b.key2.first) / b.key2.second;
+            if (std::abs(aVal - bVal) > 1e-12) return aVal < bVal;
             return a.key3.length() < b.key3.length();
         });
 
-    std::ostream_iterator<nspace::DataStruct> outputBegin(std::cout, "\n");
+    std::ostream_iterator<DataStruct> outputBegin(std::cout, "\n");
     std::copy(dataVector.begin(), dataVector.end(), outputBegin);
 
     return 0;
