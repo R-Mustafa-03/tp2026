@@ -99,87 +99,82 @@ public:
             while (std::getline(*in_, line))
             {
                 if (line.empty()) continue;
-                
-                std::string content;
+
                 if (line.front() == '(' && line.back() == ')')
                 {
-                    content = line.substr(1, line.length() - 2);
-                }
-                else
-                {
-                    continue;
-                }
+                    std::string content = line.substr(1, line.length() - 2);
 
-                std::vector<std::string> parts;
-                std::string current;
-                int bracketDepth = 0;
-                bool inQuotes = false;
+                    std::vector<std::string> parts;
+                    std::string current;
+                    int bracketDepth = 0;
+                    bool inQuotes = false;
 
-                for (char c : content)
-                {
-                    if (c == '"')
+                    for (char c : content)
                     {
-                        inQuotes = !inQuotes;
-                        current += c;
-                    }
-                    else if (c == '(' && !inQuotes)
-                    {
-                        bracketDepth++;
-                        current += c;
-                    }
-                    else if (c == ')' && !inQuotes)
-                    {
-                        bracketDepth--;
-                        current += c;
-                    }
-                    else if (c == ':' && bracketDepth == 0 && !inQuotes)
-                    {
-                        if (!current.empty())
+                        if (c == '"')
                         {
-                            parts.push_back(current);
-                            current.clear();
+                            inQuotes = !inQuotes;
+                            current += c;
+                        }
+                        else if (c == '(' && !inQuotes)
+                        {
+                            bracketDepth++;
+                            current += c;
+                        }
+                        else if (c == ')' && !inQuotes)
+                        {
+                            bracketDepth--;
+                            current += c;
+                        }
+                        else if (c == ':' && bracketDepth == 0 && !inQuotes)
+                        {
+                            if (!current.empty())
+                            {
+                                parts.push_back(current);
+                                current.clear();
+                            }
+                        }
+                        else
+                        {
+                            current += c;
                         }
                     }
-                    else
+                    if (!current.empty()) parts.push_back(current);
+
+                    DataStruct result;
+                    bool key1Ok = false, key2Ok = false, key3Ok = false;
+
+                    for (const auto& part : parts)
                     {
-                        current += c;
+                        size_t spacePos = part.find(' ');
+                        if (spacePos == std::string::npos) continue;
+
+                        std::string fieldName = part.substr(0, spacePos);
+                        std::string fieldValue = part.substr(spacePos + 1);
+
+                        if (fieldName == "key1" && isDoubleLit(fieldValue))
+                        {
+                            result.key1 = parseDoubleLit(fieldValue);
+                            key1Ok = true;
+                        }
+                        else if (fieldName == "key2" && isRational(fieldValue))
+                        {
+                            result.key2 = parseRational(fieldValue);
+                            key2Ok = true;
+                        }
+                        else if (fieldName == "key3" && isQuotedString(fieldValue))
+                        {
+                            result.key3 = parseQuotedString(fieldValue);
+                            key3Ok = true;
+                        }
                     }
-                }
-                if (!current.empty()) parts.push_back(current);
 
-                DataStruct result;
-                bool key1Ok = false, key2Ok = false, key3Ok = false;
-
-                for (const auto& part : parts)
-                {
-                    size_t spacePos = part.find(' ');
-                    if (spacePos == std::string::npos) continue;
-
-                    std::string fieldName = part.substr(0, spacePos);
-                    std::string fieldValue = part.substr(spacePos + 1);
-
-                    if (fieldName == "key1" && isDoubleLit(fieldValue))
+                    if (key1Ok && key2Ok && key3Ok)
                     {
-                        result.key1 = parseDoubleLit(fieldValue);
-                        key1Ok = true;
+                        value_ = result;
+                        consumed_ = false;
+                        return *this;
                     }
-                    else if (fieldName == "key2" && isRational(fieldValue))
-                    {
-                        result.key2 = parseRational(fieldValue);
-                        key2Ok = true;
-                    }
-                    else if (fieldName == "key3" && isQuotedString(fieldValue))
-                    {
-                        result.key3 = parseQuotedString(fieldValue);
-                        key3Ok = true;
-                    }
-                }
-
-                if (key1Ok && key2Ok && key3Ok)
-                {
-                    value_ = result;
-                    consumed_ = false;
-                    return *this;
                 }
             }
             in_ = nullptr;
@@ -245,4 +240,3 @@ int main()
 
     return 0;
 }
-
