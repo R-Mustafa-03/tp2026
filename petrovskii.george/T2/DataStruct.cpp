@@ -233,14 +233,18 @@ std::ostream& operator<<(std::ostream& out, const DataStruct& data) {
         exponent = 0;
     }
     else {
-        while (mantissa < 1.0 && mantissa != 0.0) {
-            mantissa *= 10.0;
+        double absVal = std::abs(mantissa);
+
+        while (absVal < 1.0 && absVal != 0.0) {
+            absVal *= 10.0;
             exponent--;
         }
-        while (mantissa >= 10.0) {
-            mantissa /= 10.0;
+        while (absVal >= 10.0) {
+            absVal /= 10.0;
             exponent++;
         }
+
+        mantissa = (mantissa < 0) ? -absVal : absVal;
     }
 
     out << "(:";
