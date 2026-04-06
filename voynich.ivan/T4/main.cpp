@@ -47,3 +47,4 @@ int main(){
     std::cout<<"After scale:\n";
     printInfo(shapes);
 }
+
