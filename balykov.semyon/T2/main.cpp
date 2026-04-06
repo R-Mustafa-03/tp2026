@@ -122,6 +122,7 @@ std::istream& operator>>(std::istream& in, ULLBinIO&& dest) {
         if (binary_str[i] == '1') {
             dest.ref += pow(2, lenbin - 1 - i);
         }
+    }
     return in;
 }
 std::istream& operator>>(std::istream& in, ComplexIO&& dest){
