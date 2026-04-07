@@ -253,7 +253,7 @@ std::ostream& operator<<(std::ostream& out, const DataStruct& src) {
     }
 
     out << std::fixed << std::setprecision(1)
-        << "(:key1 " << std::oct << std::showbase << src.key1 << std::dec
+        << "(:key1 " << std::oct << "0" << src.key1 << std::dec
         << ":key2 #c(" << src.key2.real() << " " << src.key2.imag() << ")"
         << ":key3 \"" << src.key3 << "\":)";
 
