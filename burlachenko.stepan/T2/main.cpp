@@ -15,15 +15,6 @@ struct DataStruct
     std::string key3;
 };
 
-static void skipSpaces(std::istream& is)
-{
-    char c;
-    while (is.peek() == ' ' || is.peek() == '\t')
-    {
-        is.get(c);
-    }
-}
-
 
 std::istream& operator>>(std::istream& is, DataStruct& ds)
 {
