@@ -109,8 +109,10 @@ std::istream& operator>>(std::istream& in, DataStruct& dest) {
 
     DataStruct temp;
 
-    in >> DelimiterIO{'('} >> DelimiterIO{':'};
-
+    if (!(in >> DelimiterIO{'('} >> DelimiterIO{':'})) {
+        in.setstate(std::ios::failbit);
+        return in;
+    }
     bool has_key1 = false;
     bool has_key2 = false;
     bool has_key3 = false;
@@ -170,11 +172,17 @@ bool compare(const DataStruct& a, const DataStruct& b) {
 int main() {
     std::vector<DataStruct> data;
 
-    std::copy(
-        std::istream_iterator<DataStruct>(std::cin),
-        std::istream_iterator<DataStruct>(),
-        std::back_inserter(data)
-    );
+    while (std::cin) {
+        DataStruct ds;
+        if (std::cin >> ds) {
+            data.push_back(ds);
+        } else if (!std::cin.eof()) {
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        } else {
+            break;
+        }
+    }
     std::sort(data.begin(), data.end(), compare);
 
     std::copy(
