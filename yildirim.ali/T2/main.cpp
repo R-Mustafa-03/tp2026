@@ -5,6 +5,7 @@
 #include <string>
 #include <iomanip>
 #include <limits>
+#include <cmath>
 
 struct DataStruct {
     double key1;
@@ -54,7 +55,9 @@ iofmtguard::~iofmtguard() {
 }
 std::istream& operator>>(std::istream& in, DelimiterIO&& dest) {
     std::istream::sentry sentry(in);
-    if (!sentry) return in;
+    if (!sentry) {
+        return in;
+    }
     char c;
     in >> c;
     if (in && c != dest.exp) {
@@ -64,12 +67,17 @@ std::istream& operator>>(std::istream& in, DelimiterIO&& dest) {
 }
 std::istream& operator>>(std::istream& in, DoubleIO&& dest) {
     std::istream::sentry sentry(in);
-    if (!sentry) return in;
+    if (!sentry) {
+        return in;
+    }
     in >> dest.ref;
     if (in) {
         char suffix;
-        in >> suffix;
-        if (suffix != 'd' && suffix != 'D') {
+        if (in >> suffix) {
+            if (suffix != 'd' && suffix != 'D') {
+                in.setstate(std::ios::failbit);
+            }
+        } else {
             in.setstate(std::ios::failbit);
         }
     }
@@ -77,7 +85,9 @@ std::istream& operator>>(std::istream& in, DoubleIO&& dest) {
 }
 std::istream& operator>>(std::istream& in, CharIO&& dest) {
     std::istream::sentry sentry(in);
-    if (!sentry) return in;
+    if (!sentry) {
+        return in;
+    }
     char quote;
     in >> quote;
     if (quote != '\'') {
@@ -93,7 +103,9 @@ std::istream& operator>>(std::istream& in, CharIO&& dest) {
 }
 std::istream& operator>>(std::istream& in, StringIO&& dest) {
     std::istream::sentry sentry(in);
-    if (!sentry) return in;
+    if (!sentry) {
+        return in;
+    }
     char quote;
     in >> quote;
     if (quote != '"') {
@@ -105,8 +117,9 @@ std::istream& operator>>(std::istream& in, StringIO&& dest) {
 }
 std::istream& operator>>(std::istream& in, DataStruct& dest) {
     std::istream::sentry sentry(in);
-    if (!sentry) return in;
-
+    if (!sentry) {
+        return in;
+    }
     DataStruct temp;
 
     if (!(in >> DelimiterIO{'('} >> DelimiterIO{':'})) {
@@ -119,6 +132,13 @@ std::istream& operator>>(std::istream& in, DataStruct& dest) {
 
     for (int i = 0; i < 3; ++i) {
         std::string key;
+        
+        if (i > 0) {
+            if (!(in >> DelimiterIO{':'})) {
+                in.setstate(std::ios::failbit);
+                return in;
+            }
+        }
         if (!(in >> key)) {
             in.setstate(std::ios::failbit);
             return in;
@@ -136,10 +156,11 @@ std::istream& operator>>(std::istream& in, DataStruct& dest) {
             in.setstate(std::ios::failbit);
             return in;
         }
-        in >> DelimiterIO{':'};
     }
-    in >> DelimiterIO{':'} >> DelimiterIO{')'};
-
+    if (!(in >> DelimiterIO{':'} >> DelimiterIO{')'})) {
+        in.setstate(std::ios::failbit);
+        return in;
+    }
     if (has_key1 && has_key2 && has_key3) {
         dest = temp;
         in.clear();
@@ -150,7 +171,9 @@ std::istream& operator>>(std::istream& in, DataStruct& dest) {
 }
 std::ostream& operator<<(std::ostream& out, const DataStruct& src) {
     std::ostream::sentry sentry(out);
-    if (!sentry) return out;
+    if (!sentry) {
+        return out;
+    }
 
     iofmtguard fmtguard(out);
 
@@ -161,7 +184,7 @@ std::ostream& operator<<(std::ostream& out, const DataStruct& src) {
     return out;
 }
 bool compare(const DataStruct& a, const DataStruct& b) {
-    if (a.key1 != b.key1) {
+    if (std::abs(a.key1 - b.key1) > 1e-9) {
         return a.key1 < b.key1;
     }
     if (a.key2 != b.key2) {
@@ -171,17 +194,14 @@ bool compare(const DataStruct& a, const DataStruct& b) {
 }
 int main() {
     std::vector<DataStruct> data;
+    DataStruct ds;
 
-    while (std::cin) {
-        DataStruct ds;
-        if (std::cin >> ds) {
-            data.push_back(ds);
-        } else if (!std::cin.eof()) {
-            std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        } else {
-            break;
-        }
+    while (std::cin >> ds) {
+        data.push_back(ds);
+    }
+    if (std::cin.fail() && !std::cin.eof()) {
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
     std::sort(data.begin(), data.end(), compare);
 
@@ -193,3 +213,4 @@ int main() {
     return 0;
 }
 //
+
