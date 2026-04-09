@@ -132,7 +132,7 @@ std::istream& operator>>(std::istream& in, DataStruct& dest) {
 
     for (int i = 0; i < 3; ++i) {
         std::string key;
-        
+
         if (i > 0) {
             if (!(in >> DelimiterIO{':'})) {
                 in.setstate(std::ios::failbit);
