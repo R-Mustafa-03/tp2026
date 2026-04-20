@@ -577,7 +577,7 @@ int main(int argc, char* argv[])
                 {
                     if (polygons.empty())
                     {
-                        std::cout << "0.0\n";
+                        std::cout << "<INVALID COMMAND>\n";
                     }
                     else
                     {
@@ -713,6 +713,12 @@ int main(int argc, char* argv[])
             {
                 Polygon polygon;
                 if (!(stream >> polygon))
+                {
+                    std::cout << "<INVALID COMMAND>\n";
+                    continue;
+                }
+                stream >> std::ws;
+                if (stream.peek() != EOF)
                 {
                     std::cout << "<INVALID COMMAND>\n";
                     continue;
