@@ -182,21 +182,24 @@ int main(int argc, char* argv[]) {
         if (cmd == "AREA") {
             std::string sub; std::cin >> sub;
             double res = 0;
-            if (container.empty()) { std::cout << "0.0" << '\n'; continue; }
-            else if (sub == "ODD"){
+            if (sub == "ODD"){
+                if (container.empty()) { std::cout << "0.0" << '\n'; continue; }
                 res = std::accumulate(container.begin(), container.end(), 0.0, AreaSummator(isVertexCountOdd));
                 std::cout << std::fixed << std::setprecision(1) << res << '\n';
             }
             else if (sub == "EVEN"){
+                if (container.empty()) { std::cout << "0.0" << '\n'; continue; }
                 res = std::accumulate(container.begin(), container.end(), 0.0, AreaSummator(isVertexCountEven));
                 std::cout << std::fixed << std::setprecision(1) << res << '\n';
             }
             else if (sub == "MEAN") {
+                if (container.empty()) { std::cout << "<INVALID COMMAND>" << '\n'; continue; }
                 res = std::accumulate(container.begin(), container.end(), 0.0,
                  AreaSummator([](const Polygon&){return true;})) / container.size();
                  std::cout << std::fixed << std::setprecision(1) << res << '\n';
             }
             else {
+                if (container.empty()) { std::cout << "0.0" << '\n'; continue; }
                 bool isNumber = (!sub.empty() && std::all_of(sub.begin(),sub.end(), ::isdigit));
                 if(isNumber){
                     size_t n = std::stoul(sub);
