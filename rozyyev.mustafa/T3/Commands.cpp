@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <limits>
 #include <cmath>
+#include <sstream>
 
 using namespace std::placeholders;
 
@@ -148,32 +149,40 @@ void cmdMaxSeq(const std::vector<Polygon>& polygons, std::istream& in) {
 //-----------------------------------all commands---------------------------------------
 
 void processCommands(const std::vector<Polygon>& polygons, std::istream& in, std::ostream& out) {
-    std::string command;
-    while (in >> command) {
+    std::string line;
+    while (std::getline(in, line)) {
+        if (line.empty()) continue;
+        std::istringstream iss(line);
+        std::string command;
+        if (!(iss >> command)) continue;
+
         try {
             if (command == "AREA") {
                 std::string arg;
-                in >> arg;
+                if (!(iss >> arg)) throw std::invalid_argument("");
                 cmdArea(polygons, arg);
             } else if (command == "MAX" || command == "MIN") {
                 std::string arg;
-                in >> arg;
+                if (!(iss >> arg)) throw std::invalid_argument("");
                 cmdMinMax(polygons, command, arg);
             } else if (command == "COUNT") {
                 std::string arg;
-                in >> arg;
+                if (!(iss >> arg)) throw std::invalid_argument("");
                 cmdCount(polygons, arg);
             } else if (command == "PERMS") {
-                cmdPerms(polygons, in);
+                cmdPerms(polygons, iss);
             } else if (command == "MAXSEQ") {
-                cmdMaxSeq(polygons, in);
+                cmdMaxSeq(polygons, iss);
             } else {
+                throw std::invalid_argument("");
+            }
+
+            iss >> std::ws;
+            if (!iss.eof()) {
                 throw std::invalid_argument("");
             }
         } catch (...) {
             out << "<INVALID COMMAND>\n";
-            in.clear();
-            in.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         }
     }
 }

@@ -1,6 +1,7 @@
 #include "Commands.h"
 #include <fstream>
 #include <sstream>
+
 int main(int argc, char* argv[]) {
     if (argc < 2) {
         std::cerr << "Usage: " << argv[0] << " <filename>\n";
@@ -20,7 +21,10 @@ int main(int argc, char* argv[]) {
         std::istringstream iss(line);
         Polygon p;
         if (iss >> p) {
-            polygons.push_back(p);
+            iss >> std::ws;
+            if (iss.eof()) {
+                polygons.push_back(p);
+            }
         }
     }
 
