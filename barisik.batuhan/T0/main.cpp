@@ -1,0 +1,6 @@
+#include <iostream>
+
+int main() {
+    std::cout << "barisik.batuhan" << std::endl;
+    return 0;
+}
