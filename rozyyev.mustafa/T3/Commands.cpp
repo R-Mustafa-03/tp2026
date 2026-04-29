@@ -5,7 +5,6 @@
 #include <iomanip>
 #include <limits>
 #include <cmath>
-#include <sstream>
 
 using namespace std::placeholders;
 
@@ -120,6 +119,7 @@ bool isPermutation(const Polygon& p1, const Polygon& p2) {
 void cmdPerms(const std::vector<Polygon>& polygons, std::istream& in) {
     Polygon target;
     if (!(in >> target)) throw std::invalid_argument("");
+
     size_t result = std::count_if(polygons.begin(), polygons.end(),
                                   std::bind(isPermutation, _1, target));
     std::cout << result << "\n";
@@ -143,6 +143,7 @@ void cmdMaxSeq(const std::vector<Polygon>& polygons, std::istream& in) {
 
     std::pair<int, int> result = std::accumulate(polygons.begin(), polygons.end(),
                                  std::make_pair(0, 0), MaxSeqFold(target));
+
     std::cout << result.second << "\n";
 }
 
