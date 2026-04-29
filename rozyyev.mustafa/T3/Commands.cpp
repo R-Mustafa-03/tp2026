@@ -120,6 +120,9 @@ void cmdPerms(const std::vector<Polygon>& polygons, std::istream& in) {
     Polygon target;
     if (!(in >> target)) throw std::invalid_argument("");
 
+    in >> std::ws;
+    if (!in.eof()) throw std::invalid_argument("");
+
     size_t result = std::count_if(polygons.begin(), polygons.end(),
                                   std::bind(isPermutation, _1, target));
     std::cout << result << "\n";
@@ -140,6 +143,11 @@ struct MaxSeqFold {
 void cmdMaxSeq(const std::vector<Polygon>& polygons, std::istream& in) {
     Polygon target;
     if (!(in >> target)) throw std::invalid_argument("");
+
+    in >> std::ws;
+    if (!in.eof()) {
+        throw std::invalid_argument("");
+    }
 
     std::pair<int, int> result = std::accumulate(polygons.begin(), polygons.end(),
                                  std::make_pair(0, 0), MaxSeqFold(target));
@@ -172,12 +180,13 @@ void processCommands(const std::vector<Polygon>& polygons, std::istream& in, std
                 cmdCount(polygons, arg);
             } else if (command == "PERMS") {
                 cmdPerms(polygons, iss);
+                continue;
             } else if (command == "MAXSEQ") {
                 cmdMaxSeq(polygons, iss);
+                continue;
             } else {
                 throw std::invalid_argument("");
             }
-
             iss >> std::ws;
             if (!iss.eof()) {
                 throw std::invalid_argument("");
