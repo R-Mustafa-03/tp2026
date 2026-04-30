@@ -18,15 +18,15 @@ std::istream& operator>>(std::istream &in, Polygon &pol) {
     }
 
     std::vector<Point> temp;
-    for (size_t i = 0; i < size; ++i) {
-        Point p;
-        if (in >> p) {
-            temp.push_back(p);
-        } else {
-            in.setstate(std::ios_base::failbit);
-            return in;
-        }
+    temp.reserve(size);
+
+    std::copy_n(std::istream_iterator<Point>(in), size, std::back_inserter(temp));
+
+    if (temp.size() != size) {
+        in.setstate(std::ios_base::failbit);
+        return in;
     }
+
     pol.points = std::move(temp);
     return in;
 }

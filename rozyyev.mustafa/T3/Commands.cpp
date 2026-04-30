@@ -3,81 +3,109 @@
 #include <functional>
 #include <numeric>
 #include <iomanip>
-#include <limits>
 #include <cmath>
 
 using namespace std::placeholders;
 
-//--------------------------------Area-----------------------------------------
+//----------------------------Area------------------------------------------
 
-double crossProduct(const Point& p1, const Point& p2) {
-    return p1.x * p2.y - p1.y * p2.x;
-}
+struct AreaState {
+    double area;
+    Point prev;
+};
+
+struct AccumulateArea {
+    AreaState operator()(const AreaState& state, const Point& current) const {
+        double cross = static_cast<double>(state.prev.x) * current.y -
+                       static_cast<double>(state.prev.y) * current.x;
+        return {state.area + cross, current};
+    }
+};
 
 double getPolygonArea(const Polygon& pol) {
-    double area = std::inner_product(
-        pol.points.begin(), pol.points.end() - 1, pol.points.begin() + 1,
-         0.0, std::plus<double>(), crossProduct
-         );
-    area += crossProduct(pol.points.back(), pol.points.front());
-    return std::abs(area) / 2.0;
+    if (pol.points.size() < 3) return 0.0;
+
+    AreaState result = std::accumulate(
+        pol.points.begin() + 1, pol.points.end(),
+        AreaState{0.0, pol.points.front()},
+        AccumulateArea()
+    );
+
+    double final_cross = static_cast<double>(result.prev.x) * pol.points.front().y -
+                         static_cast<double>(result.prev.y) * pol.points.front().x;
+
+    return std::abs(result.area + final_cross) / 2.0;
 }
 
-bool isEvenVertices(const Polygon& p) { return p.points.size() % 2 == 0; }
-bool isOddVertices(const Polygon& p)  { return p.points.size() % 2 != 0; }
-bool isNumVertices(const Polygon& p, size_t n) { return p.points.size() == n; }
+struct AreaIfEven {
+    double operator()(double sum, const Polygon& p) const {
+        return (p.points.size() % 2 == 0) ? sum + getPolygonArea(p) : sum;
+    }
+};
 
-double addAreaIfEven(double sum, const Polygon& p) {
-    return isEvenVertices(p) ? sum + getPolygonArea(p) : sum;
-}
-double addAreaIfOdd(double sum, const Polygon& p) {
-    return isOddVertices(p) ? sum + getPolygonArea(p) : sum;
-}
-double addAreaIfNum(double sum, const Polygon& p, size_t n) {
-    return isNumVertices(p, n) ? sum + getPolygonArea(p) : sum;
-}
-double addAreaAll(double sum, const Polygon& p) {
-    return sum + getPolygonArea(p);
-}
+struct AreaIfOdd {
+    double operator()(double sum, const Polygon& p) const {
+        return (p.points.size() % 2 != 0) ? sum + getPolygonArea(p) : sum;
+    }
+};
+
+struct AreaIfNum {
+    size_t n;
+    explicit AreaIfNum(size_t n) : n(n) {}
+    double operator()(double sum, const Polygon& p) const {
+        return (p.points.size() == n) ? sum + getPolygonArea(p) : sum;
+    }
+};
+
+struct AreaAll {
+    double operator()(double sum, const Polygon& p) const {
+        return sum + getPolygonArea(p);
+    }
+};
 
 void cmdArea(const std::vector<Polygon>& polygons, const std::string& arg) {
     if (arg == "EVEN") {
         std::cout << std::fixed << std::setprecision(1)
-                  << std::accumulate(polygons.begin(), polygons.end(), 0.0, addAreaIfEven) << "\n";
+                  << std::accumulate(polygons.begin(), polygons.end(), 0.0, AreaIfEven()) << "\n";
     } else if (arg == "ODD") {
         std::cout << std::fixed << std::setprecision(1)
-                  << std::accumulate(polygons.begin(), polygons.end(), 0.0, addAreaIfOdd) << "\n";
+                  << std::accumulate(polygons.begin(), polygons.end(), 0.0, AreaIfOdd()) << "\n";
     } else if (arg == "MEAN") {
         if (polygons.empty()) throw std::invalid_argument("");
-        double total = std::accumulate(polygons.begin(), polygons.end(), 0.0, addAreaAll);
+        double total = std::accumulate(polygons.begin(), polygons.end(), 0.0, AreaAll());
         std::cout << std::fixed << std::setprecision(1) << (total / polygons.size()) << "\n";
     } else {
         size_t n = std::stoull(arg);
         if (n < 3) throw std::invalid_argument("");
         std::cout << std::fixed << std::setprecision(1)
-                  << std::accumulate(polygons.begin(), polygons.end(), 0.0,
-                     std::bind(addAreaIfNum, _1, _2, n)) << "\n";
+                  << std::accumulate(polygons.begin(), polygons.end(), 0.0, AreaIfNum(n)) << "\n";
     }
 }
 
 //---------------------------------Max/Min----------------------------------------
 
-bool compareArea(const Polygon& a, const Polygon& b) {
-    return getPolygonArea(a) < getPolygonArea(b);
-}
-bool compareVertices(const Polygon& a, const Polygon& b) {
-    return a.points.size() < b.points.size();
-}
+struct CompareArea {
+    bool operator()(const Polygon& a, const Polygon& b) const {
+        return getPolygonArea(a) < getPolygonArea(b);
+    }
+};
+
+struct CompareVertices {
+    bool operator()(const Polygon& a, const Polygon& b) const {
+        return a.points.size() < b.points.size();
+    }
+};
+
 void cmdMinMax(const std::vector<Polygon>& polygons, const std::string& type, const std::string& arg) {
     if (polygons.empty()) throw std::invalid_argument("");
 
     if (arg == "AREA") {
-        auto it = (type == "MAX") ? std::max_element(polygons.begin(), polygons.end(), compareArea)
-                                  : std::min_element(polygons.begin(), polygons.end(), compareArea);
+        auto it = (type == "MAX") ? std::max_element(polygons.begin(), polygons.end(), CompareArea())
+                                  : std::min_element(polygons.begin(), polygons.end(), CompareArea());
         std::cout << std::fixed << std::setprecision(1) << getPolygonArea(*it) << "\n";
     } else if (arg == "VERTEXES") {
-        auto it = (type == "MAX") ? std::max_element(polygons.begin(), polygons.end(), compareVertices)
-                                  : std::min_element(polygons.begin(), polygons.end(), compareVertices);
+        auto it = (type == "MAX") ? std::max_element(polygons.begin(), polygons.end(), CompareVertices())
+                                  : std::min_element(polygons.begin(), polygons.end(), CompareVertices());
         std::cout << it->points.size() << "\n";
     } else {
         throw std::invalid_argument("");
@@ -86,35 +114,57 @@ void cmdMinMax(const std::vector<Polygon>& polygons, const std::string& type, co
 
 //--------------------------------------Count-------------------------------------------
 
+struct IsEvenVertices {
+    bool operator()(const Polygon& p) const { return p.points.size() % 2 == 0; }
+};
+
+struct IsOddVertices {
+    bool operator()(const Polygon& p) const { return p.points.size() % 2 != 0; }
+};
+
 void cmdCount(const std::vector<Polygon>& polygons, const std::string& arg) {
     if (arg == "EVEN") {
-        std::cout << std::count_if(polygons.begin(), polygons.end(), isEvenVertices) << "\n";
+        std::cout << std::count_if(polygons.begin(), polygons.end(), IsEvenVertices()) << "\n";
     } else if (arg == "ODD") {
-        std::cout << std::count_if(polygons.begin(), polygons.end(), isOddVertices) << "\n";
+        std::cout << std::count_if(polygons.begin(), polygons.end(), IsOddVertices()) << "\n";
     } else {
-        size_t n = std::stoull(arg);
-        if (n < 3) throw std::invalid_argument("");
-        std::cout << std::count_if(polygons.begin(), polygons.end(),
-                     std::bind(isNumVertices, _1, n)) << "\n";
+        try {
+            size_t n = std::stoull(arg);
+            if (n < 3) throw std::invalid_argument("");
+
+            std::cout << std::count_if(polygons.begin(), polygons.end(),
+                std::bind(std::equal_to<size_t>(),
+                    std::bind(&std::vector<Point>::size,
+                        std::bind(&Polygon::points, _1)), n)) << "\n";
+        } catch (...) {
+            throw std::invalid_argument("");
+        }
     }
 }
 
 //--------------------------------PERMS----------------------------------------
 
-bool comparePoints(const Point& a, const Point& b) {
-    return a.x < b.x || (a.x == b.x && a.y < b.y);
-}
+struct ComparePoints {
+    bool operator()(const Point& a, const Point& b) const {
+        if (a.x == b.x) return a.y < b.y;
+        return a.x < b.x;
+    }
+};
 
-bool isPermutation(const Polygon& p1, const Polygon& p2) {
-    if (p1.points.size() != p2.points.size()) return false;
+struct IsPermutation {
+    Polygon target;
 
-    Polygon copy1 = p1;
-    Polygon copy2 = p2;
+    explicit IsPermutation(Polygon t) : target(std::move(t)) {
+        std::sort(target.points.begin(), target.points.end(), ComparePoints());
+    }
 
-    std::sort(copy1.points.begin(), copy1.points.end(), comparePoints);
-    std::sort(copy2.points.begin(), copy2.points.end(), comparePoints);
-    return copy1.points == copy2.points;
-}
+    bool operator()(const Polygon& p) const {
+        if (p.points.size() != target.points.size()) return false;
+        Polygon copy = p;
+        std::sort(copy.points.begin(), copy.points.end(), ComparePoints());
+        return copy.points == target.points;
+    }
+};
 
 void cmdPerms(const std::vector<Polygon>& polygons, std::istream& in) {
     Polygon target;
@@ -123,8 +173,7 @@ void cmdPerms(const std::vector<Polygon>& polygons, std::istream& in) {
     in >> std::ws;
     if (!in.eof()) throw std::invalid_argument("");
 
-    size_t result = std::count_if(polygons.begin(), polygons.end(),
-                                  std::bind(isPermutation, _1, target));
+    size_t result = std::count_if(polygons.begin(), polygons.end(), IsPermutation(std::move(target)));
     std::cout << result << "\n";
 }
 
@@ -132,7 +181,7 @@ void cmdPerms(const std::vector<Polygon>& polygons, std::istream& in) {
 
 struct MaxSeqFold {
     Polygon target;
-    MaxSeqFold(const Polygon& t) : target(t) {}
+    explicit MaxSeqFold(const Polygon& t) : target(std::move(t)) {}
 
     std::pair<int, int> operator()(const std::pair<int, int>& state, const Polygon& p) const {
         int current = (p == target) ? state.first + 1 : 0;
@@ -150,7 +199,7 @@ void cmdMaxSeq(const std::vector<Polygon>& polygons, std::istream& in) {
     }
 
     std::pair<int, int> result = std::accumulate(polygons.begin(), polygons.end(),
-                                 std::make_pair(0, 0), MaxSeqFold(target));
+                                 std::make_pair(0, 0), MaxSeqFold(std::move(target)));
 
     std::cout << result.second << "\n";
 }
@@ -187,6 +236,7 @@ void processCommands(const std::vector<Polygon>& polygons, std::istream& in, std
             } else {
                 throw std::invalid_argument("");
             }
+
             iss >> std::ws;
             if (!iss.eof()) {
                 throw std::invalid_argument("");

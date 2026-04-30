@@ -7,9 +7,6 @@
 #include <iostream>
 
 double getPolygonArea(const Polygon& pol);
-bool isEvenVertices(const Polygon& p);
-bool isOddVertices(const Polygon& p);
-bool isNumVertices(const Polygon& p, size_t n);
 
 void cmdArea(const std::vector<Polygon>& polygons, const std::string& arg);
 void cmdMinMax(const std::vector<Polygon>& polygons, const std::string& type, const std::string& arg);
